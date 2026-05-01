@@ -80,6 +80,7 @@ export const getProducts = async (req, res) => {
 };
 
 // ✅ CREATE PRODUCT
+
 export const createProducts = async (req, res) => {
   try {
     let {
