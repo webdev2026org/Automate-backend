@@ -32,3 +32,7 @@ export const getProducts = async (filter, options) => {
 export const createProducts = async (data) => {
   return await Product.create(data);
 };
+
+export const createBulkProducts = async (products) => {
+  return await Product.insertMany(products, { ordered: false });
+};

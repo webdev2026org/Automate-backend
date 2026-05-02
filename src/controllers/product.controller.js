@@ -149,3 +149,46 @@ export const createProducts = async (req, res) => {
     });
   }
 };
+
+// ✅ BULK CREATE PRODUCTS
+export const createBulkProducts = async (req, res) => {
+  try {
+    const products = req.body;
+
+    if (!Array.isArray(products) || products.length === 0) {
+      return res.status(400).json({
+        message: "Send a non-empty array of products",
+      });
+    }
+
+    // ✅ Normalize each product same way as createProducts
+    const normalized = products.map((p) => {
+      const numericPrice = Number(
+        typeof p.price === "string" ? p.price.replace("$", "") : p.price,
+      );
+      return {
+        image: p.image,
+        alt: p.alt,
+        category: p.category,
+        title: p.title?.trim(),
+        price: isNaN(numericPrice) ? 0 : numericPrice,
+        subtitle: p.subtitle,
+        stockText: p.stockText,
+        rating: p.rating ? Number(p.rating) : 0,
+        brand: p.brand,
+      };
+    });
+
+    const inserted = await productService.createBulkProducts(normalized);
+
+    res.status(201).json({
+      message: `${inserted.length} products inserted`,
+      data: inserted,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: error.message || "Server error",
+    });
+  }
+};
