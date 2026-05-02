@@ -9,7 +9,9 @@ export const getProducts = async (req, res) => {
       maxPrice,
       searchValue,
       sortBy,
-      order
+      order,
+      page,
+      limit,
     } = req.query;
 
     // ✅ FIX: convert comma-separated string → array
@@ -53,9 +55,9 @@ export const getProducts = async (req, res) => {
     let sort = {};
 
     if (sortBy === "Popularity") {
-      sort.rating = -1;
+      sort.rating = order === "asc" ? 1 : -1;
     } else if (sortBy === "Date") {
-      sort.createdAt = -1;
+      sort.createdAt = order === "asc" ? 1 : -1;
     } else {
       sort.createdAt = -1; // default
     }
@@ -63,18 +65,29 @@ export const getProducts = async (req, res) => {
     console.log("FILTER:", filter);
     console.log("SORT:", sort);
 
-    const products = await productService.getProducts(filter, { sort });
+    const {
+      products,
+      total,
+      page: currentPage,
+      limit: currentLimit,
+    } = await productService.getProducts(filter, {
+      sort,
+      page: Number(page) || 1,
+      limit: Number(limit) || 50,
+    });
 
     res.status(200).json({
       success: true,
       count: products.length,
+      total,
+      page: currentPage,
+      pages: Math.ceil(total / currentLimit),
       data: products,
     });
-
   } catch (error) {
     console.error(error);
     res.status(500).json({
-      message: "Server error",
+      message: error.message,
     });
   }
 };
@@ -92,7 +105,7 @@ export const createProducts = async (req, res) => {
       subtitle,
       stockText,
       rating,
-      brand
+      brand,
     } = req.body;
 
     // ✅ Basic validation
@@ -104,7 +117,7 @@ export const createProducts = async (req, res) => {
 
     // ✅ Convert price to number (handles "$129.99" or "129.99")
     const numericPrice = Number(
-      typeof price === "string" ? price.replace("$", "") : price
+      typeof price === "string" ? price.replace("$", "") : price,
     );
 
     if (isNaN(numericPrice)) {
@@ -129,7 +142,6 @@ export const createProducts = async (req, res) => {
     });
 
     res.status(201).json(product);
-
   } catch (error) {
     console.error(error);
     res.status(500).json({
