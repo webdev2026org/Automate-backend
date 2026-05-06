@@ -36,3 +36,18 @@ export const createProducts = async (data) => {
 export const createBulkProducts = async (products) => {
   return await Product.insertMany(products, { ordered: false });
 };
+
+// ✅ GET BY ID
+export const getProductById = async (id) => {
+  return await Product.findById(id);
+};
+
+// ✅ UPDATE
+export const updateProduct = async (id, data) => {
+  return await Product.findByIdAndUpdate(id, data, { new: true });
+};
+
+// ✅ DELETE
+export const deleteProduct = async (id) => {
+  return await Product.findByIdAndDelete(id);
+};
