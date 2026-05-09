@@ -14,7 +14,7 @@ const productSchema = new mongoose.Schema(
       trim: true,
     },
     price: {
-      type: Number, // ✅ FIXED (critical)
+      type: Number, 
       required: true,
     },
     subtitle: String,
