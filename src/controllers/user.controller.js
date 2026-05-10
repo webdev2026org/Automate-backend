@@ -1,3 +1,4 @@
+import jwt from "jsonwebtoken";
 import * as userService from "../services/user.service.js";
 
 export const getUsers = async (req, res) => {
@@ -16,7 +17,6 @@ export const getUsers = async (req, res) => {
 
     const users = await userService.getUsers();
     res.status(200).json(users);
-
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -38,7 +38,6 @@ export const registerUser = async (req, res) => {
       message: "User created successfully",
       user: username,
     });
-
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -58,11 +57,47 @@ export const loginUser = async (req, res) => {
       return res.status(401).json({ message: "Incorrect password" });
     }
 
+    const token = jwt.sign(
+      { id: user._id, username: user.username, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" },
+    );
+
     res.status(200).json({
       message: "Login successful",
       user: username,
+      token,
     });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
 
+export const updateUserRole = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { role } = req.body;
+
+    const validRoles = ["user", "admin", "guest"];
+    if (!validRoles.includes(role)) {
+      return res.status(400).json({ message: "Invalid role" });
+    }
+
+    const updated = await userService.updateUserById(id, { role });
+    res.status(200).json({ message: "Role updated", user: updated });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const user = await userService.deleteUserById(id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.status(200).json({ message: "User deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

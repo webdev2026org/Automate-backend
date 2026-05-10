@@ -13,3 +13,11 @@ export const getUserByUsername = async (username) => {
     username: { $regex: `^${username}$`, $options: "i" } // case-insensitive
   })
 };
+
+export const updateUserById = async (id, data) => {
+  return await User.findByIdAndUpdate(id, data, { returnDocument: 'after' });
+};
+
+export const deleteUserById = async (id) => {
+  return await User.findByIdAndDelete(id);
+};

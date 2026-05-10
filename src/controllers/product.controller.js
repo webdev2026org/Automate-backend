@@ -41,7 +41,7 @@ export const getProducts = async (req, res) => {
     // ✅ Price filter
     if (maxPrice) {
       filter.price = {
-        $gte: 25,
+        $gte: 199,
         $lte: Number(maxPrice),
       };
     }
@@ -92,6 +92,17 @@ export const getProducts = async (req, res) => {
   }
 };
 
+// ✅ GET PRODUCT BY ID
+export const getProductById = async (req, res) => {
+  try {
+    const product = await productService.getProductById(req.params.id);
+    if (!product) return res.status(404).json({ message: "Product not found" });
+    res.status(200).json(product);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // ✅ CREATE PRODUCT
 
 export const createProducts = async (req, res) => {
@@ -117,7 +128,7 @@ export const createProducts = async (req, res) => {
 
     // ✅ Convert price to number (handles "$129.99" or "129.99")
     const numericPrice = Number(
-      typeof price === "string" ? price.replace("$", "") : price,
+      typeof price === "string" ? price.replace("₹", "") : price,
     );
 
     if (isNaN(numericPrice)) {
@@ -164,7 +175,7 @@ export const createBulkProducts = async (req, res) => {
     // ✅ Normalize each product same way as createProducts
     const normalized = products.map((p) => {
       const numericPrice = Number(
-        typeof p.price === "string" ? p.price.replace("$", "") : p.price,
+        typeof p.price === "string" ? p.price.replace("₹", "") : p.price,
       );
       return {
         image: p.image,
@@ -193,17 +204,6 @@ export const createBulkProducts = async (req, res) => {
   }
 };
 
-// ✅ GET PRODUCT BY ID
-export const getProductById = async (req, res) => {
-  try {
-    const product = await productService.getProductById(req.params.id);
-    if (!product) return res.status(404).json({ message: "Product not found" });
-    res.status(200).json(product);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
 // ✅ UPDATE PRODUCT
 export const updateProduct = async (req, res) => {
   try {
@@ -212,6 +212,62 @@ export const updateProduct = async (req, res) => {
     res.status(200).json(updated);
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+export const bulkUpdateProducts = async (req, res) => {
+  try {
+    const updates = req.body;
+
+    if (!Array.isArray(updates) || updates.length === 0) {
+      return res.status(400).json({
+        message: "Send a non-empty array of updates",
+      });
+    }
+
+    // normalize same way as createBulkProducts
+    const normalized = updates.map(({ id, data }) => {
+      const numericPrice = data.price
+        ? Number(
+            typeof data.price === "string"
+              ? data.price.replace("₹", "")
+              : data.price,
+          )
+        : undefined;
+
+      return {
+        id,
+        data: {
+          ...(data.image && { image: data.image }),
+          ...(data.alt && { alt: data.alt }),
+          ...(data.category && { category: data.category }),
+          ...(data.title && { title: data.title.trim() }),
+          ...(data.price && {
+            price: isNaN(numericPrice) ? undefined : numericPrice,
+          }),
+          ...(data.subtitle && { subtitle: data.subtitle }),
+          ...(data.stockText && { stockText: data.stockText }),
+          ...(data.rating && { rating: Number(data.rating) }),
+          ...(data.brand && { brand: data.brand }),
+        },
+      };
+    });
+
+    const results = await Promise.all(
+      normalized.map(({ id, data }) =>
+        productService.updateProductById(id, data),
+      ),
+    );
+
+    res.status(200).json({
+      message: `${results.length} products updated`,
+      data: results,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: error.message || "Server error",
+    });
   }
 };
 

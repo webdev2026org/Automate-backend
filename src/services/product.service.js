@@ -44,7 +44,11 @@ export const getProductById = async (id) => {
 
 // ✅ UPDATE
 export const updateProduct = async (id, data) => {
-  return await Product.findByIdAndUpdate(id, data, { new: true });
+  return await Product.findByIdAndUpdate(id, data, { returnDocument: 'after' });
+};
+
+export const updateProductById = async (id, data) => {
+  return await Product.findByIdAndUpdate(id, data, { returnDocument: 'after' });
 };
 
 // ✅ DELETE
