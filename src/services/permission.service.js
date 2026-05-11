@@ -5,7 +5,7 @@ const ROLE_HIERARCHY = ["guest", "user", "admin"];
 const PERMISSIONS = {
   guest:  ["product:read"],
   user:   ["product:read", "product:create"],
-  admin:  ["product:read", "product:create", "product:update", "product:delete", "user:read"],
+  admin:  ["product:read", "product:create", "product:update", "product:delete", "user:read", "user:update", "user:delete"],
 };
 
 export const hasPermission = (role, action) => {

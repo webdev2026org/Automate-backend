@@ -34,6 +34,6 @@ router
   .route("/products/:id")
   .get(getProductById)
   .put(authenticate, requirePermission("product:update"), updateProduct)
-  .delete(authenticate, requirePermission("product:update"), deleteProduct);
+  .delete(authenticate, requirePermission("product:delete"), deleteProduct);
 
 export default router;
